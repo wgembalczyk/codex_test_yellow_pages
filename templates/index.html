@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brainstorm - Join</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body data-page="index">
+  <main class="container">
+    <h1>Brainstorm Session</h1>
+    <p class="access-code">Current access code for presenter: <strong id="current-access-code">{{ access_code }}</strong></p>
+    <form id="join-form" class="card">
+      <label>
+        Access code
+        <input type="text" name="access_code" id="access-code-input" required value="{{ access_code }}" autocomplete="off">
+      </label>
+      <label>
+        Name
+        <input type="text" name="name" id="name-input" required autocomplete="off">
+      </label>
+      <label class="checkbox">
+        <input type="checkbox" name="is_organizer" id="organizer-input">
+        I am an organizer
+      </label>
+      <button type="submit">Enter board</button>
+    </form>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
