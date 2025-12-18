@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Dict
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 
 from brainstorm.domain import (
     Board,
@@ -81,7 +81,12 @@ def handle_not_found(_: NotFound):
 
 @app.route("/")
 def index():
-    return jsonify({"status": "ok", "access_code": board.access_code})
+    return render_template("index.html", access_code=board.access_code)
+
+
+@app.route("/board")
+def board_view():
+    return render_template("board.html", access_code=board.access_code)
 
 
 @app.route("/api/status")

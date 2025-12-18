@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brainstorm Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body data-page="board">
+  <main class="container">
+    <header class="board-header">
+      <div>
+        <h1>Board</h1>
+        <p>Access code: <strong id="board-access-code">{{ access_code }}</strong></p>
+        <p>Phase: <strong id="phase-label">-</strong></p>
+      </div>
+      <div class="controls" id="organizer-controls" hidden>
+        <button id="start-voting">Start Voting</button>
+        <button id="finish-board">Finish</button>
+        <button id="reset-board" class="danger">Reset</button>
+      </div>
+      <div class="user-info">
+        <p id="user-name"></p>
+        <p id="remaining-points"></p>
+      </div>
+    </header>
+
+    <section id="add-note-section" class="card" hidden>
+      <h2>Add sticky</h2>
+      <div class="add-form">
+        <input type="text" id="note-text" placeholder="Your idea" maxlength="200">
+        <button id="add-note">Add</button>
+      </div>
+    </section>
+
+    <section class="board-canvas" id="board-canvas"></section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
