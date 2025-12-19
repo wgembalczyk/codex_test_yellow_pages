@@ -10,10 +10,12 @@ from brainstorm.domain import (
     ForbiddenInPhase,
     InvalidPhaseTransition,
     NameAlreadyExists,
+    NoteTextTooLong,
     NotAuthor,
     NotFound,
     NotOrganizer,
     Phase,
+    StickyLimitExceeded,
     VoteLimitExceeded,
 )
 
@@ -61,12 +63,22 @@ def handle_invalid_phase(_: InvalidPhaseTransition):
 
 @app.errorhandler(ForbiddenInPhase)
 def handle_forbidden_phase(_: ForbiddenInPhase):
-    return jsonify({"error": "forbidden in current phase"}), 403
+    return jsonify({"error": f"action forbidden in {board.phase.value} phase"}), 403
 
 
 @app.errorhandler(VoteLimitExceeded)
 def handle_vote_limit(_: VoteLimitExceeded):
     return _bad_request("vote limit exceeded")
+
+
+@app.errorhandler(NoteTextTooLong)
+def handle_note_text_too_long(_: NoteTextTooLong):
+    return _bad_request("sticky text exceeds 200 characters")
+
+
+@app.errorhandler(StickyLimitExceeded)
+def handle_sticky_limit(_: StickyLimitExceeded):
+    return _bad_request("sticky limit reached (50 per participant)")
 
 
 @app.errorhandler(NotAuthor)

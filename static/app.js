@@ -1,4 +1,17 @@
 const PAGE = document.body.dataset.page;
+const errorBanner = document.getElementById("error-banner");
+
+function showError(message) {
+  if (!errorBanner) return;
+  errorBanner.textContent = message;
+  errorBanner.hidden = false;
+}
+
+function clearError() {
+  if (!errorBanner) return;
+  errorBanner.textContent = "";
+  errorBanner.hidden = true;
+}
 
 function redirectHome() {
   window.location.href = "/";
@@ -21,9 +34,10 @@ function renderIndex() {
     const name = document.getElementById("name-input").value.trim();
     const isOrganizer = document.getElementById("organizer-input").checked;
     if (!accessCode || !name) {
-      alert("Please provide access code and name.");
+      showError("Please provide access code and name.");
       return;
     }
+    clearError();
     const params = new URLSearchParams({
       access_code: accessCode,
       name,
@@ -159,6 +173,7 @@ function renderBoard() {
   const startVotingBtn = document.getElementById("start-voting");
   const finishBtn = document.getElementById("finish-board");
   const resetBtn = document.getElementById("reset-board");
+  let currentPhase = "GENERATING";
 
   if (!accessCode || !name) {
     redirectHome();
@@ -179,9 +194,10 @@ function renderBoard() {
         method: "POST",
         body: JSON.stringify({ name, is_organizer: isOrganizer }),
       }, accessCode);
+      clearError();
     } catch (error) {
       if (!String(error.message).includes("already taken")) {
-        alert(`Failed to join: ${error.message}`);
+        showError(`Failed to join: ${error.message}`);
         redirectHome();
         throw error;
       }
@@ -189,6 +205,7 @@ function renderBoard() {
   }
 
   function renderBoardState(data) {
+    currentPhase = data.phase;
     phaseLabel.textContent = data.phase;
     const remaining = computeRemaining(data.votes);
     remainingPointsLabel.textContent = `Remaining points: ${remaining}`;
@@ -208,8 +225,9 @@ function renderBoard() {
               method: "POST",
               body: JSON.stringify({ name, x, y }),
             }, accessCode);
+            clearError();
           } catch (error) {
-            alert(`Move failed: ${error.message}`);
+            showError(`Move failed: ${error.message}`);
           }
         },
         async (noteId, val) => {
@@ -218,10 +236,11 @@ function renderBoard() {
               method: "POST",
               body: JSON.stringify({ name, sticky_id: noteId, points: val }),
             }, accessCode);
+            clearError();
             const updated = await fetchJson("/api/board", { method: "GET" }, accessCode);
             renderBoardState(updated);
           } catch (error) {
-            alert(`Vote failed: ${error.message}`);
+            showError(`Vote failed: ${error.message}`);
           }
         }
       );
@@ -230,6 +249,10 @@ function renderBoard() {
   }
 
   addButton?.addEventListener("click", async () => {
+    if (currentPhase === "FINISHED") {
+      showError("Board is finished. Changes are not allowed.");
+      return;
+    }
     const text = noteInput.value.trim();
     if (!text) return;
     const x = Math.floor(Math.random() * 400);
@@ -239,11 +262,12 @@ function renderBoard() {
         method: "POST",
         body: JSON.stringify({ name, text, x, y }),
       }, accessCode);
+      clearError();
       noteInput.value = "";
       const updated = await fetchJson("/api/board", { method: "GET" }, accessCode);
       renderBoardState(updated);
     } catch (error) {
-      alert(`Add failed: ${error.message}`);
+      showError(`Add failed: ${error.message}`);
     }
   });
 
@@ -253,10 +277,11 @@ function renderBoard() {
         method: "POST",
         body: JSON.stringify({ name, phase: "VOTING" }),
       }, accessCode);
+      clearError();
       const updated = await fetchJson("/api/board", { method: "GET" }, accessCode);
       renderBoardState(updated);
     } catch (error) {
-      alert(`Cannot start voting: ${error.message}`);
+      showError(`Cannot start voting: ${error.message}`);
     }
   });
 
@@ -266,10 +291,11 @@ function renderBoard() {
         method: "POST",
         body: JSON.stringify({ name, phase: "FINISHED" }),
       }, accessCode);
+      clearError();
       const updated = await fetchJson("/api/board", { method: "GET" }, accessCode);
       renderBoardState(updated);
     } catch (error) {
-      alert(`Cannot finish: ${error.message}`);
+      showError(`Cannot finish: ${error.message}`);
     }
   });
 
@@ -280,9 +306,10 @@ function renderBoard() {
         method: "POST",
         body: JSON.stringify({ name }),
       }, accessCode);
+      clearError();
       redirectHome();
     } catch (error) {
-      alert(`Reset failed: ${error.message}`);
+      showError(`Reset failed: ${error.message}`);
     }
   });
 

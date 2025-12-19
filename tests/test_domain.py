@@ -7,10 +7,12 @@ from brainstorm.domain import (
     ForbiddenInPhase,
     InvalidPhaseTransition,
     NameAlreadyExists,
+    NoteTextTooLong,
     NotAuthor,
     NotFound,
     NotOrganizer,
     Phase,
+    StickyLimitExceeded,
     VoteLimitExceeded,
 )
 
@@ -113,6 +115,23 @@ def test_voting_only_allowed_in_voting_phase():
     board.change_phase("org", Phase.FINISHED)
     with pytest.raises(ForbiddenInPhase):
         board.set_vote("alice", note.id, 0)
+
+
+def test_note_text_length_limit():
+    board = Board(rng=random.Random(8))
+    board.join("org", True)
+    long_text = "x" * 201
+    with pytest.raises(NoteTextTooLong):
+        board.add_note("org", long_text, 0, 0)
+
+
+def test_sticky_limit_per_participant():
+    board = Board(rng=random.Random(9))
+    board.join("org", True)
+    for i in range(50):
+        board.add_note("org", f"note {i}", 0, 0)
+    with pytest.raises(StickyLimitExceeded):
+        board.add_note("org", "overflow", 0, 0)
 
 
 def test_reset_clears_state_and_regenerates_access_code():

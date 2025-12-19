@@ -116,6 +116,90 @@ def test_vote_limit_enforced():
     assert second_vote.status_code == 400
 
 
+def test_sticky_text_length_limit_rejected():
+    client = app.app.test_client()
+    client.post("/api/join", json={"name": "org", "is_organizer": True}, headers=auth_headers())
+    long_text = "x" * 201
+
+    response = client.post(
+        "/api/stickies",
+        json={"name": "org", "text": long_text, "x": 1, "y": 2},
+        headers=auth_headers(),
+    )
+    assert response.status_code == 400
+
+
+def test_sticky_limit_per_participant_enforced():
+    client = app.app.test_client()
+    client.post("/api/join", json={"name": "org", "is_organizer": True}, headers=auth_headers())
+    for i in range(50):
+        response = client.post(
+            "/api/stickies",
+            json={"name": "org", "text": f"note {i}", "x": 1, "y": 2},
+            headers=auth_headers(),
+        )
+        assert response.status_code == 201
+
+    overflow = client.post(
+        "/api/stickies",
+        json={"name": "org", "text": "overflow", "x": 1, "y": 2},
+        headers=auth_headers(),
+    )
+    assert overflow.status_code == 400
+
+
+def test_finished_phase_forbids_modifications():
+    client = app.app.test_client()
+    client.post("/api/join", json={"name": "org", "is_organizer": True}, headers=auth_headers())
+    client.post("/api/join", json={"name": "bob", "is_organizer": False}, headers=auth_headers())
+
+    note_resp = client.post(
+        "/api/stickies",
+        json={"name": "org", "text": "idea", "x": 0, "y": 0},
+        headers=auth_headers(),
+    )
+    note_id = note_resp.get_json()["id"]
+
+    client.post(
+        "/api/phase",
+        json={"name": "org", "phase": "VOTING"},
+        headers=auth_headers(),
+    )
+    client.post(
+        "/api/phase",
+        json={"name": "org", "phase": "FINISHED"},
+        headers=auth_headers(),
+    )
+
+    add_resp = client.post(
+        "/api/stickies",
+        json={"name": "org", "text": "late", "x": 1, "y": 1},
+        headers=auth_headers(),
+    )
+    assert add_resp.status_code == 403
+
+    move_resp = client.post(
+        f"/api/stickies/{note_id}/move",
+        json={"name": "org", "x": 2, "y": 2},
+        headers=auth_headers(),
+    )
+    assert move_resp.status_code == 403
+
+    delete_resp = client.delete(
+        f"/api/stickies/{note_id}",
+        json={"name": "org"},
+        headers=auth_headers(),
+    )
+    assert delete_resp.status_code == 403
+
+    vote_resp = client.post(
+        "/api/votes",
+        json={"name": "bob", "sticky_id": note_id, "points": 1},
+        headers=auth_headers(),
+    )
+    assert vote_resp.status_code == 403
+
+
 def test_reset_clears_state_and_changes_access_code():
     client = app.app.test_client()
     client.post("/api/join", json={"name": "org", "is_organizer": True}, headers=auth_headers())
@@ -129,4 +213,3 @@ def test_reset_clears_state_and_changes_access_code():
     status_resp = client.get("/api/status", headers={"X-Access-Code": after_reset_code})
     assert status_resp.status_code == 200
     assert status_resp.get_json()["participants_count"] == 0
-
