@@ -27,6 +27,14 @@ class VoteLimitExceeded(Exception):
     pass
 
 
+class NoteTextTooLong(Exception):
+    pass
+
+
+class StickyLimitExceeded(Exception):
+    pass
+
+
 class NotAuthor(Exception):
     pass
 
@@ -42,6 +50,8 @@ class Phase(str, Enum):
 
 
 COLORS = ["#fff59d", "#ffe082", "#ffcc80", "#c5e1a5", "#fff176", "#ffd180"]
+MAX_NOTE_LENGTH = 200
+MAX_NOTES_PER_PARTICIPANT = 50
 
 
 @dataclass
@@ -94,6 +104,13 @@ class Board:
         author = self.participants.get(author_name)
         if not author:
             raise NotFound()
+        if len(text) > MAX_NOTE_LENGTH:
+            raise NoteTextTooLong()
+        author_note_count = sum(
+            1 for note in self.notes.values() if note.author_name == author_name
+        )
+        if author_note_count >= MAX_NOTES_PER_PARTICIPANT:
+            raise StickyLimitExceeded()
         note_id = str(uuid.UUID(int=self.rng.getrandbits(128)))
         note = Note(
             id=note_id,

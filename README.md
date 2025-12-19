@@ -290,6 +290,14 @@ upewnij się, że Flask działa z debug=False w instrukcji.
 
 Dodaj/zmień testy, jeśli to konieczne. Nie dodawaj żadnych nowych “ficzerów”.
 
+## Uruchomienie lokalne (debug=False)
+
+```
+python app.py
+```
+
+Flask działa bez trybu debug (`debug=False`).
+
 PROMPT 5 — Etap 5: Deployment instrukcja (tylko Cloudflare Tunnel free) + porządkowanie repo
 
 Dodaj pliki i instrukcje, aby uruchomienie było powtarzalne:

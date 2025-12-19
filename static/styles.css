@@ -28,6 +28,15 @@ h1 {
   margin-bottom: 16px;
 }
 
+.error-banner {
+  background: #ffebee;
+  border: 1px solid #d32f2f;
+  color: #b71c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
 label {
   display: block;
   margin-bottom: 12px;
